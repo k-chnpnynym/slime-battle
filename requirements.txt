@@ -1,0 +1,5 @@
+# Required only for pyside6 sample codes
+PySide6>=6.9.1
+
+# Python version requirement
+python>=3.6.0
