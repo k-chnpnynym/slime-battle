@@ -19,8 +19,8 @@
 
 1. リポジトリをクローンまたはダウンロード：
 ```bash
-git clone <repository-url>
-cd <project-directory>
+git clone https://github.com/k-chnpnynym/slime-battle.git
+cd slime-battle
 ```
 
 2. Python 3.6以上がインストールされていることを確認：
@@ -39,7 +39,6 @@ reg add HKEY_CURRENT_USER\Console /v VirtualTerminalLevel /t REG_DWORD /d 1
 ゲームを開始するには、以下のコマンドを実行します：
 
 ```bash
-cd class_lessons/samples/asset_management
 python slime_battle.py
 ```
 
