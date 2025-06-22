@@ -41,6 +41,10 @@
     │           ├── [Class] KingSlime（キングスライム）
     │           └── [Class] MetalKingSlime（メタルキングスライム）
     ├── [Module] hero.py（勇者関連）
+    │   ├── [Class] Equipment（装備品基底クラス）
+    │   │   ├── [Class] UltimateWeapon（破壊神の杖）
+    │   │   ├── [Class] UltimateArmor（賢者のローブ）
+    │   │   └── [Class] UltimateAccessory（精霊の首飾り）
     │   └── [Class] AllyCharacter（味方キャラクター）
     │       └── [Class] Sage（賢者）
     ├── [Class] SlimeArt（スライム表示）
@@ -57,19 +61,15 @@
 
 [Module] test_slime_battle.py（スライムバトルテスト）
     ├── [Test Class] TestSlimeBase（基本スライムテスト）
-    │   ├── [Test Method] test_slime_initialization（スライム初期化テスト）
-    │   └── [Test Method] test_slime_take_damage（ダメージ処理テスト）
     ├── [Test Class] TestSage（賢者テスト）
-    │   ├── [Test Method] test_spell_casting（呪文詠唱テスト）
-    │   └── [Test Method] test_level_up（レベルアップテスト）
-    └── [Test Class] TestBattle（バトルテスト）
-        ├── [Test Method] test_battle_initialization（バトル初期化テスト）
-        └── [Test Method] test_battle_turn（ターン処理テスト）
+    ├── [Test Class] TestSlimeTypes（スライムタイプテスト）
+    ├── [Test Class] TestBattle（バトルテスト）
+    └── [Test Class] TestSlimeArt（スライムアートテスト）
 
 [Module] test_report.py（テストレポート）
-    └── [Class] TestReport（テストレポート生成）
-        ├── [Method] generate_markdown_report（Markdownレポート生成）
-        └── [Method] generate_html_report（HTMLレポート生成）
+    ├── [Class] DetailedTestResult（テスト結果詳細）
+    ├── [Method] generate_markdown_report（Markdownレポート生成）
+    └── [Method] generate_html_report（HTMLレポート生成）
 ```
 
 ### ファイル構成と役割
@@ -194,7 +194,7 @@ class SlimeArt:
         # スライムの種類に応じたアートを返す
         if isinstance(slime, MetalKingSlime):
             return metal_king_art  # メタルキングスライムは👑付き
-        elif isinstance(slime, (MetalSlime, MetalKing)):
+        elif isinstance(slime, (MetalSlime, StrayMetal)):
             return metal_art       # メタルスライムとはぐれメタルは通常のメタル
         elif isinstance(slime, KingSlime):
             return king_art       # キングスライムは👑付き
@@ -365,23 +365,62 @@ def level_up(self):
 
 ### 5. 装備システム
 
+#### 装備品の基底クラス
+```python
+class Equipment:
+    def __init__(self, name, equipment_type, stats):
+        self.name = name
+        self.equipment_type = equipment_type  # "武器", "防具", "装飾品"
+        self.stats = stats  # 装備品のステータス変更値を辞書で保持
+```
+
 #### 装備の種類と効果
-1. 武器
-   | 装備名 | 攻撃力 | 魔力 | MP | 特記事項 |
-   |--------|---------|------|------|----------|
-   | 破壊神の杖 | +50 | +100 | +50 | 最強武器 |
+1. 武器（破壊神の杖）
+```python
+class UltimateWeapon(Equipment):
+    def __init__(self):
+        super().__init__(
+            name="破壊神の杖",
+            equipment_type="武器",
+            stats={
+                "attack": 50,
+                "magic_attack": 100,
+                "mp": 50
+            }
+        )
+```
 
-2. 防具
-   | 装備名 | 防御力 | 魔法防御 | HP | 特記事項 |
-   |--------|---------|------|------|----------|
-   | 賢者のローブ | +45 | +65 | +100 | 最強防具 |
+2. 防具（賢者のローブ）
+```python
+class UltimateArmor(Equipment):
+    def __init__(self):
+        super().__init__(
+            name="賢者のローブ",
+            equipment_type="防具",
+            stats={
+                "defense": 45,
+                "magic_defense": 65,
+                "hp": 100
+            }
+        )
+```
 
-3. 装飾品
-   | 装備名 | MP | 魔力 | 魔法防御 | 特記事項 |
-   |--------|---------|------|------|----------|
-   | 精霊の首飾り | +100 | +30 | +30 | 最強装飾品 |
+3. 装飾品（精霊の首飾り）
+```python
+class UltimateAccessory(Equipment):
+    def __init__(self):
+        super().__init__(
+            name="精霊の首飾り",
+            equipment_type="装飾品",
+            stats={
+                "mp": 100,
+                "magic_attack": 30,
+                "magic_defense": 30
+            }
+        )
+```
 
-#### 装備の着用
+#### 装備の着用と効果
 ```python
 def equip(self, equipment):
     """装備を着用し、ステータスを更新する"""
@@ -416,24 +455,77 @@ def equip(self, equipment):
     return f"{equipment.name}を装備した！"
 ```
 
+#### 装備のテスト
+```python
+def test_equipment(self):
+    """装備システムのテスト"""
+    # 初期ステータスを保存
+    initial_stats = {
+        "hp": self.sage.max_hp,
+        "mp": self.sage.max_mp,
+        "attack": self.sage.attack,
+        "defense": self.sage.defense,
+        "magic_attack": self.sage.magic_attack,
+        "magic_defense": self.sage.magic_defense
+    }
+    
+    # 最強武器の装備テスト
+    weapon = UltimateWeapon()
+    self.sage.equip(weapon)
+    self.assertEqual(self.sage.equipment["武器"], weapon)
+    self.assertEqual(self.sage.attack, initial_stats["attack"] + 50)
+    self.assertEqual(self.sage.magic_attack, initial_stats["magic_attack"] + 100)
+    self.assertEqual(self.sage.max_mp, initial_stats["mp"] + 50)
+    
+    # 最強防具の装備テスト
+    armor = UltimateArmor()
+    self.sage.equip(armor)
+    self.assertEqual(self.sage.equipment["防具"], armor)
+    self.assertEqual(self.sage.defense, initial_stats["defense"] + 45)
+    self.assertEqual(self.sage.magic_defense, initial_stats["magic_defense"] + 65)
+    self.assertEqual(self.sage.max_hp, initial_stats["hp"] + 100)
+    
+    # 最強装飾品の装備テスト
+    accessory = UltimateAccessory()
+    self.sage.equip(accessory)
+    self.assertEqual(self.sage.equipment["装飾品"], accessory)
+    self.assertEqual(self.sage.max_mp, initial_stats["mp"] + 50 + 100)  # 武器とアクセサリーのMP合計
+    self.assertEqual(self.sage.magic_attack, initial_stats["magic_attack"] + 100 + 30)  # 武器とアクセサリーの魔力合計
+    self.assertEqual(self.sage.magic_defense, initial_stats["magic_defense"] + 65 + 30)  # 防具とアクセサリーの魔法防御合計
+```
+
 ## テスト機能
 
-### 1. テストモード
-- バトルクラスのテストモード
-- 自動アクション実行
-- 1ターンのみの実行
+### 1. テストケース一覧
 
-### 2. テストレポート
-- Markdown形式のレポート
-- HTML形式のレポート
-- 実行時間の計測
-- エラー情報の詳細表示
+1. **TestSlimeBase**
+   - test_slime_initialization: 基本スライムの初期化テスト
+   - test_slime_take_damage: ダメージ計算のテスト
 
-### 3. テストケース
-- スライムの基本機能テスト
-- 賢者の機能テスト
-- バトルシステムのテスト
-- ビジュアル表現のテスト
+2. **TestSage**
+   - test_sage_initialization: 賢者の初期化テスト
+   - test_level_up: レベルアップ時のステータス上昇テスト
+   - test_spell_casting: 呪文詠唱テスト
+   - test_spell_learning_on_level_up: レベルアップ時の呪文習得テスト
+   - test_equipment: 装備システムのテスト
+
+3. **TestSlimeTypes**
+   - test_metal_slime_properties: メタルスライムの特性テスト
+   - test_stray_metal_properties: はぐれメタルの特性テスト
+   - test_poison_slime_properties: 毒スライムの特性テスト
+   - test_king_slime_properties: キングスライムの特性テスト
+   - test_metal_king_properties: メタルキングスライムの特性テスト
+
+4. **TestBattle**
+   - test_battle_initialization: バトル初期化テスト
+   - test_battle_first_turn: 最初のターンのテスト
+   - test_status_effects: 状態異常の処理テスト
+   - test_enemy_special_abilities: 敵の特殊能力テスト
+   - test_escape_chances: 逃走確率テスト
+
+5. **TestSlimeArt**
+   - test_get_slime_art: スライムのアスキーアート取得テスト
+   - test_get_slime_color: スライムの色情報取得テスト
 
 ## 学習ポイント
 
