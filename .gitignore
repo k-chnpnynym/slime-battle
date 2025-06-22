@@ -22,4 +22,5 @@ build/
 htmlcov/
 .coverage
 .pytest_cache/
+test_reports/
 

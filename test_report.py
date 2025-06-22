@@ -173,7 +173,9 @@ def generate_html_report(result):
 def run_tests_with_report():
     # テストスイートの作成
     loader = unittest.TestLoader()
-    suite = loader.loadTestsFromModule(sys.modules[__name__])
+    # test_slime_battle.pyからすべてのテストを読み込む
+    import test_slime_battle
+    suite = loader.loadTestsFromModule(test_slime_battle)
 
     # テストの実行
     result = DetailedTestResult()

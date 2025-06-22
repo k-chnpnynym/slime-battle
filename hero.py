@@ -1,3 +1,45 @@
+class Equipment:
+    def __init__(self, name, equipment_type, stats):
+        self.name = name
+        self.equipment_type = equipment_type  # "武器", "防具", "装飾品"
+        self.stats = stats  # 装備品のステータス変更値を辞書で保持
+
+class UltimateWeapon(Equipment):
+    def __init__(self):
+        super().__init__(
+            name="破壊神の杖",
+            equipment_type="武器",
+            stats={
+                "attack": 50,
+                "magic_attack": 100,
+                "mp": 50
+            }
+        )
+
+class UltimateArmor(Equipment):
+    def __init__(self):
+        super().__init__(
+            name="賢者のローブ",
+            equipment_type="防具",
+            stats={
+                "defense": 45,
+                "magic_defense": 65,
+                "hp": 100
+            }
+        )
+
+class UltimateAccessory(Equipment):
+    def __init__(self):
+        super().__init__(
+            name="精霊の首飾り",
+            equipment_type="装飾品",
+            stats={
+                "mp": 100,
+                "magic_attack": 30,
+                "magic_defense": 30
+            }
+        )
+
 class AllyCharacter:
     def __init__(self):
         self.hp = 1
@@ -33,7 +75,9 @@ class AllyCharacter:
             "魔法防御": self.magic_defense,
             "経験値": self.exp,
             "使用可能な呪文": self.spells,
-            "装備": self.equipment
+            "武器": self.equipment["武器"].name if self.equipment["武器"] else "なし",
+            "防具": self.equipment["防具"].name if self.equipment["防具"] else "なし",
+            "装飾品": self.equipment["装飾品"].name if self.equipment["装飾品"] else "なし"
         }
 
     def level_up(self):
@@ -47,6 +91,38 @@ class AllyCharacter:
         self.defense += 2
         self.magic_attack += 2
         self.magic_defense += 2
+
+    def equip(self, equipment):
+        """装備を着用し、ステータスを更新する"""
+        if equipment.equipment_type not in self.equipment:
+            return f"その装備品は装備できない！"
+
+        # 既存の装備を外す
+        old_equipment = self.equipment[equipment.equipment_type]
+        if old_equipment:
+            for stat, value in old_equipment.stats.items():
+                if stat == "hp":
+                    self.max_hp -= value
+                    self.hp = min(self.hp, self.max_hp)
+                elif stat == "mp":
+                    self.max_mp -= value
+                    self.mp = min(self.mp, self.max_mp)
+                else:
+                    setattr(self, stat, getattr(self, stat) - value)
+
+        # 新しい装備を付ける
+        self.equipment[equipment.equipment_type] = equipment
+        for stat, value in equipment.stats.items():
+            if stat == "hp":
+                self.max_hp += value
+                self.hp = min(self.hp, self.max_hp)
+            elif stat == "mp":
+                self.max_mp += value
+                self.mp = min(self.mp, self.max_mp)
+            else:
+                setattr(self, stat, getattr(self, stat) + value)
+
+        return f"{equipment.name}を装備した！"
 
 
 class Sage(AllyCharacter):
@@ -181,26 +257,23 @@ if __name__ == "__main__":
     # 賢者のインスタンスを作成してテスト
     sage = Sage("てるた")
     
-    # ステータスを表示
+    # 最強装備を作成
+    ultimate_weapon = UltimateWeapon()
+    ultimate_armor = UltimateArmor()
+    ultimate_accessory = UltimateAccessory()
+    
     print("【初期ステータス】")
     status = sage.get_status()
     for key, value in status.items():
         print(f"{key}: {value}")
     
-    # 呪文を使ってみる
-    print("\n【呪文テスト】")
-    print(sage.cast_spell("ホイミ"))
-    print(f"残りMP: {sage.mp}/{sage.max_mp}")
+    # 最強装備を装着
+    print("\n【最強装備装着】")
+    print(sage.equip(ultimate_weapon))
+    print(sage.equip(ultimate_armor))
+    print(sage.equip(ultimate_accessory))
     
-    print("\nメラを使用")
-    print(sage.cast_spell("メラ"))
-    print(f"残りMP: {sage.mp}/{sage.max_mp}")
-    
-    # レベルアップのテスト
-    print("\n【レベルアップテスト】")
-    for _ in range(5):
-        sage.level_up()
-    print(f"レベル{sage.level}になった！")
+    print("\n【最終ステータス】")
     status = sage.get_status()
     for key, value in status.items():
         print(f"{key}: {value}") 

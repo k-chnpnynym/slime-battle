@@ -363,6 +363,59 @@ def level_up(self):
     self.magic_defense += 2
 ```
 
+### 5. 装備システム
+
+#### 装備の種類と効果
+1. 武器
+   | 装備名 | 攻撃力 | 魔力 | MP | 特記事項 |
+   |--------|---------|------|------|----------|
+   | 破壊神の杖 | +50 | +100 | +50 | 最強武器 |
+
+2. 防具
+   | 装備名 | 防御力 | 魔法防御 | HP | 特記事項 |
+   |--------|---------|------|------|----------|
+   | 賢者のローブ | +45 | +65 | +100 | 最強防具 |
+
+3. 装飾品
+   | 装備名 | MP | 魔力 | 魔法防御 | 特記事項 |
+   |--------|---------|------|------|----------|
+   | 精霊の首飾り | +100 | +30 | +30 | 最強装飾品 |
+
+#### 装備の着用
+```python
+def equip(self, equipment):
+    """装備を着用し、ステータスを更新する"""
+    if equipment.equipment_type not in self.equipment:
+        return f"その装備品は装備できない！"
+
+    # 既存の装備を外す
+    old_equipment = self.equipment[equipment.equipment_type]
+    if old_equipment:
+        for stat, value in old_equipment.stats.items():
+            if stat == "hp":
+                self.max_hp -= value
+                self.hp = min(self.hp, self.max_hp)
+            elif stat == "mp":
+                self.max_mp -= value
+                self.mp = min(self.mp, self.max_mp)
+            else:
+                setattr(self, stat, getattr(self, stat) - value)
+
+    # 新しい装備を付ける
+    self.equipment[equipment.equipment_type] = equipment
+    for stat, value in equipment.stats.items():
+        if stat == "hp":
+            self.max_hp += value
+            self.hp = min(self.hp, self.max_hp)
+        elif stat == "mp":
+            self.max_mp += value
+            self.mp = min(self.mp, self.max_mp)
+        else:
+            setattr(self, stat, getattr(self, stat) + value)
+
+    return f"{equipment.name}を装備した！"
+```
+
 ## テスト機能
 
 ### 1. テストモード

@@ -128,6 +128,38 @@ def test_spell_casting(self):
     self.sage.cast_spell("メラ", target)
     self.assertTrue(self.sage.mp < initial_mp)  # MPが消費されているか
     self.assertTrue(target.hp < target.max_hp)  # ダメージが入っているか
+
+def test_spell_learning_on_level_up(self):
+    """レベルアップ時の呪文習得テスト"""
+    # レベル3での呪文習得テスト
+    while self.sage.level < 3:
+        self.sage.level_up()
+    self.assertIn("ベホイミ", self.sage.spells)
+    self.assertIn("メラミ", self.sage.spells)
+    
+    # レベル5での呪文習得テスト
+    while self.sage.level < 5:
+        self.sage.level_up()
+    self.assertIn("ベホマ", self.sage.spells)
+    self.assertIn("メラゾーマ", self.sage.spells)
+
+def test_equipment(self):
+    """装備システムのテスト"""
+    # 初期ステータスを保存
+    initial_stats = {
+        "hp": self.sage.max_hp,
+        "mp": self.sage.max_mp,
+        "attack": self.sage.attack,
+        "defense": self.sage.defense,
+        "magic_attack": self.sage.magic_attack,
+        "magic_defense": self.sage.magic_defense
+    }
+    
+    # 最強武器の装備テスト
+    weapon = UltimateWeapon()
+    self.sage.equip(weapon)
+    self.assertEqual(self.sage.attack, initial_stats["attack"] + 50)
+    self.assertEqual(self.sage.magic_attack, initial_stats["magic_attack"] + 100)
 ```
 
 このテストでは：
@@ -136,78 +168,93 @@ def test_spell_casting(self):
 - 呪文の効果（ダメージ、回復、状態変化）
 を確認します。
 
-### 3. バトルのテスト（TestBattle）
+### 3. スライムタイプのテスト（TestSlimeTypes）
 
 ```python
-def test_battle_initialization(self):
-    """バトル初期化テスト"""
-    self.assertIsNone(self.battle.current_enemy)
-    self.assertEqual(self.battle.turn_count, 0)
-    
-    self.battle.start_battle()
-    
-    self.assertIsNotNone(self.battle.current_enemy)
-    self.assertEqual(self.battle.turn_count, 0)
+def test_metal_slime_properties(self):
+    """メタルスライムの特性テスト"""
+    metal = MetalSlime()
+    self.assertEqual(metal.defense, 255)  # 高防御力
+    self.assertEqual(metal.exp, 500)  # 高経験値
+    self.assertEqual(metal.color, "銀")
+
+def test_poison_slime_properties(self):
+    """毒スライムの特性テスト"""
+    poison = PoisonSlime()
+    self.assertEqual(poison.color, "紫")
+    self.assertEqual(poison.special_ability, "毒攻撃")
+
+def test_king_slime_properties(self):
+    """キングスライムの特性テスト"""
+    king = KingSlime()
+    self.assertTrue(king.hp > BaseSlime().hp)  # 通常より高いHP
+    self.assertEqual(king.special_ability, "分裂攻撃")
 ```
 
 このテストでは：
-- バトル開始前の初期状態
-- バトル開始後の状態変化
-- ターン数の管理
-を確認します。
+- 各種スライムの特性確認
 
-### 4. スライムアートのテスト（TestSlimeArt）
+### 4. バトルのテスト（TestBattle）
+
+```python
+def test_enemy_special_abilities(self):
+    """敵の特殊能力テスト"""
+    # 毒スライムのテスト
+    self.battle.current_enemy = PoisonSlime()
+    self.battle.enemy_special_attack()
+    self.assertIn("毒", self.player.status_effects)
+    
+    # キングスライムのテスト
+    self.battle.current_enemy = KingSlime()
+    initial_hp = self.player.hp
+    self.battle.enemy_special_attack()
+    self.assertTrue(self.player.hp < initial_hp)  # 分裂攻撃でダメージ
+
+def test_escape_chances(self):
+    """逃走確率テスト"""
+    # メタルキングスライム（最高逃走率）
+    self.battle.current_enemy = MetalKingSlime()
+    self.assertEqual(self.battle.get_escape_chance(), 0.9)
+    
+    # はぐれメタル（高逃走率）
+    self.battle.current_enemy = StrayMetal()
+    self.assertEqual(self.battle.get_escape_chance(), 0.8)
+```
+
+このテストでは：
+- 敵の特殊能力テスト
+- 逃走確率テスト
+
+### 5. スライムアートのテスト（TestSlimeArt）
 
 ```python
 def test_get_slime_art(self):
     """スライムのアスキーアート取得テスト"""
-    test_slimes = [
-        BaseSlime(),        # 通常スライム
-        MetalSlime(),       # メタルスライム
-        StrayMetal(),       # はぐれメタル（👑なし）
-        KingSlime(),        # キングスライム（👑あり）
-        PoisonSlime(),      # 毒スライム
-        MetalKingSlime()    # メタルキングスライム（👑あり）
-    ]
-    
-    for slime in test_slimes:
-        art = self.art.get_slime_art(slime)
-        self.assertIsNotNone(art)
-        self.assertIsInstance(art, str)
-        self.assertTrue(len(art) > 0)
-        
-        # 特定のスライムの特徴をチェック
-        if isinstance(slime, MetalKingSlime):
-            self.assertIn("👑", art)  # メタルキングスライムは👑を持つ
-        elif isinstance(slime, (MetalSlime, StrayMetal)):
-            self.assertNotIn("👑", art)  # メタルスライムとはぐれメタルは👑を持たない
-        elif isinstance(slime, KingSlime):
-            self.assertIn("👑", art)  # キングスライムは👑を持つ
-        elif isinstance(slime, PoisonSlime):
-            self.assertIn("☠", art)  # 毒スライムは☠を持つ
+    slime = BaseSlime()
+    art = self.art.get_slime_art(slime)
+    self.assertIsNotNone(art)
+    self.assertIsInstance(art, str)
+    self.assertTrue(len(art) > 0)
 
 def test_get_slime_color(self):
     """スライムの色情報取得テスト"""
     test_slimes = [
-        BaseSlime(),        # 青
-        MetalSlime(),       # 銀
-        KingSlime(),        # 紫
-        StrayMetal(),       # 金
-        PoisonSlime(),      # 紫
-        MetalKingSlime()    # 金
+        BaseSlime(),    # 青
+        MetalSlime(),   # 銀
+        KingSlime(),    # 紫
+        StrayMetal()    # 金
     ]
     
     for slime in test_slimes:
         color = self.art.get_slime_color(slime)
         self.assertIsNotNone(color)
         self.assertIsInstance(color, str)
-        self.assertTrue(color.startswith("\033["))
+        self.assertTrue(color.startswith("\033["))  # ANSIカラーコードで始まるか
 ```
 
 このテストでは：
-- 各種スライムのアスキーアート生成
-- 特定のスライム種別に応じた特徴（👑、☠など）の存在確認
-- 色情報の取得と形式
+- スライムのアスキーアート生成
+- 各種スライムの色情報の取得と形式
 を確認します。
 
 ## テストの書き方のコツ
@@ -260,23 +307,42 @@ def setUp(self):
 
 ## テストレポートの生成
 
-テスト結果を分かりやすく記録するために、テストレポートを生成できます：
+テスト結果を分かりやすく記録するために、DetailedTestResultクラスを使用してテストレポートを生成します：
 
 ```python
-# test_report.pyを実行
-python test_report.py
+def run_tests_with_report():
+    # テストスイートの作成
+    loader = unittest.TestLoader()
+    import test_slime_battle
+    suite = loader.loadTestsFromModule(test_slime_battle)
+
+    # テストの実行
+    result = DetailedTestResult()
+    runner = TextTestRunner(verbosity=2)
+    suite.run(result)
+
+    # レポートの生成（Markdown & HTML）
+    markdown_report = generate_markdown_report(result)
+    html_report = generate_html_report(result)
 ```
 
-生成されるレポートの形式：
-1. Markdown形式 (.md)
-   - 実行概要（日時、テスト数、成功/失敗数）
-   - テストクラスごとの結果
-   - 各テストの詳細（説明、結果、実行時間）
+生成されるレポートには以下の情報が含まれます：
 
-2. HTML形式 (.html)
-   - 見やすいレイアウト
-   - 色分けされた結果表示
-   - 詳細なエラー情報
+1. 実行概要
+   - 実行日時
+   - 総テスト数
+   - 成功/失敗/エラー数
+
+2. テストクラスごとの詳細
+   - テスト名
+   - テストの説明
+   - 実行結果（✅成功/❌失敗）
+   - 実行時間
+   - エラー詳細（失敗時）
+
+3. 視覚的な表示
+   - HTMLレポート：色分けされた結果表示
+   - Markdown：絵文字を使用した結果表示
 
 ## まとめ
 

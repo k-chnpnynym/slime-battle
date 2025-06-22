@@ -1,6 +1,6 @@
 import unittest
-from slime import BaseSlime, MetalSlime, MetalKing, PoisonSlime, KingSlime, MetalKingSlime
-from hero import Sage
+from slime import BaseSlime, MetalSlime, StrayMetal, PoisonSlime, KingSlime, MetalKingSlime
+from hero import Sage, UltimateWeapon, UltimateArmor, UltimateAccessory
 from slime_battle import Battle, SlimeArt
 
 class TestSlimeBase(unittest.TestCase):
@@ -56,6 +56,118 @@ class TestSage(unittest.TestCase):
         self.assertTrue(self.sage.mp < initial_mp)  # MPが消費されているか
         self.assertTrue(target.hp < target.max_hp)  # ダメージが入っているか
 
+    def test_equipment(self):
+        """装備システムのテスト"""
+        # 初期ステータスを保存
+        initial_stats = {
+            "hp": self.sage.max_hp,
+            "mp": self.sage.max_mp,
+            "attack": self.sage.attack,
+            "defense": self.sage.defense,
+            "magic_attack": self.sage.magic_attack,
+            "magic_defense": self.sage.magic_defense
+        }
+        
+        # 最強武器の装備テスト
+        weapon = UltimateWeapon()
+        self.sage.equip(weapon)
+        self.assertEqual(self.sage.equipment["武器"], weapon)
+        self.assertEqual(self.sage.attack, initial_stats["attack"] + 50)
+        self.assertEqual(self.sage.magic_attack, initial_stats["magic_attack"] + 100)
+        self.assertEqual(self.sage.max_mp, initial_stats["mp"] + 50)
+        
+        # 最強防具の装備テスト
+        armor = UltimateArmor()
+        self.sage.equip(armor)
+        self.assertEqual(self.sage.equipment["防具"], armor)
+        self.assertEqual(self.sage.defense, initial_stats["defense"] + 45)
+        self.assertEqual(self.sage.magic_defense, initial_stats["magic_defense"] + 65)
+        self.assertEqual(self.sage.max_hp, initial_stats["hp"] + 100)
+        
+        # 最強装飾品の装備テスト
+        accessory = UltimateAccessory()
+        self.sage.equip(accessory)
+        self.assertEqual(self.sage.equipment["装飾品"], accessory)
+        self.assertEqual(self.sage.max_mp, initial_stats["mp"] + 50 + 100)  # 武器とアクセサリーのMP合計
+        self.assertEqual(self.sage.magic_attack, initial_stats["magic_attack"] + 100 + 30)  # 武器とアクセサリーの魔力合計
+        self.assertEqual(self.sage.magic_defense, initial_stats["magic_defense"] + 65 + 30)  # 防具とアクセサリーの魔法防御合計
+
+    def test_spell_learning_on_level_up(self):
+        """レベルアップ時の呪文習得テスト"""
+        # レベル3での呪文習得テスト
+        while self.sage.level < 3:
+            self.sage.level_up()
+        self.assertIn("ベホイミ", self.sage.spells)
+        self.assertIn("メラミ", self.sage.spells)
+        
+        # レベル5での呪文習得テスト
+        while self.sage.level < 5:
+            self.sage.level_up()
+        self.assertIn("ベホマ", self.sage.spells)
+        self.assertIn("メラゾーマ", self.sage.spells)
+        
+        # レベル7での呪文習得テスト
+        while self.sage.level < 7:
+            self.sage.level_up()
+        self.assertIn("ルーラ", self.sage.spells)
+
+    def test_all_spell_effects(self):
+        """全呪文の効果テスト"""
+        target = BaseSlime()
+        target.hp = target.max_hp
+        
+        # 回復呪文のテスト
+        self.sage.hp = 1  # HPを減らす
+        self.sage.cast_spell("ホイミ", self.sage)
+        self.assertTrue(self.sage.hp > 1)  # 回復されているか
+        
+        # 攻撃呪文のテスト（弱点あり）
+        target.weakness = "火"  # 火属性弱点
+        initial_hp = target.hp
+        self.sage.cast_spell("メラ", target)
+        self.assertTrue(target.hp < initial_hp)  # ダメージが入っているか
+        
+        # MPが足りない場合のテスト
+        self.sage.mp = 0
+        result = self.sage.cast_spell("メラ", target)
+        self.assertTrue("MPが足りない" in result)
+
+class TestSlimeTypes(unittest.TestCase):
+    """各スライムタイプのテスト"""
+    
+    def test_metal_slime_properties(self):
+        """メタルスライムの特性テスト"""
+        metal = MetalSlime()
+        self.assertEqual(metal.defense, 255)  # 高防御力
+        self.assertEqual(metal.exp, 500)  # 高経験値
+        self.assertEqual(metal.color, "銀")
+        
+    def test_stray_metal_properties(self):
+        """はぐれメタルの特性テスト"""
+        stray = StrayMetal()
+        self.assertEqual(stray.defense, 255)
+        self.assertEqual(stray.exp, 2000)  # 非常に高い経験値
+        self.assertTrue("非常に高確率で逃げる" in stray.special_ability)
+        
+    def test_poison_slime_properties(self):
+        """毒スライムの特性テスト"""
+        poison = PoisonSlime()
+        self.assertEqual(poison.color, "紫")
+        self.assertEqual(poison.special_ability, "毒攻撃")
+        
+    def test_king_slime_properties(self):
+        """キングスライムの特性テスト"""
+        king = KingSlime()
+        self.assertTrue(king.hp > BaseSlime().hp)  # 通常より高いHP
+        self.assertEqual(king.special_ability, "分裂攻撃")
+        
+    def test_metal_king_properties(self):
+        """メタルキングスライムの特性テスト"""
+        metal_king = MetalKingSlime()
+        self.assertEqual(metal_king.defense, 255)
+        self.assertEqual(metal_king.exp, 5000)  # 最高の経験値
+        self.assertEqual(metal_king.color, "金")
+
 class TestBattle(unittest.TestCase):
     def setUp(self):
         """各テストケース実行前の準備"""
@@ -91,6 +203,33 @@ class TestBattle(unittest.TestCase):
         self.battle.process_status_effects()
         self.assertTrue(self.player.hp < initial_hp)  # 毒ダメージが入っているか
 
+    def test_enemy_special_abilities(self):
+        """敵の特殊能力テスト"""
+        # 毒スライムのテスト
+        self.battle.current_enemy = PoisonSlime()
+        self.battle.enemy_special_attack()
+        self.assertIn("毒", self.player.status_effects)
+        
+        # キングスライムのテスト
+        self.battle.current_enemy = KingSlime()
+        initial_hp = self.player.hp
+        self.battle.enemy_special_attack()
+        self.assertTrue(self.player.hp < initial_hp)  # 分裂攻撃でダメージ
+        
+    def test_escape_chances(self):
+        """逃走確率テスト"""
+        # メタルキングスライム（最高逃走率）
+        self.battle.current_enemy = MetalKingSlime()
+        self.assertEqual(self.battle.get_escape_chance(), 0.9)
+        
+        # はぐれメタル（高逃走率）
+        self.battle.current_enemy = StrayMetal()
+        self.assertEqual(self.battle.get_escape_chance(), 0.8)
+        
+        # 通常スライム（逃走しない）
+        self.battle.current_enemy = BaseSlime()
+        self.assertEqual(self.battle.get_escape_chance(), 0.0)
+
 class TestSlimeArt(unittest.TestCase):
     def setUp(self):
         """各テストケース実行前の準備"""
@@ -110,7 +249,7 @@ class TestSlimeArt(unittest.TestCase):
             BaseSlime(),    # 青
             MetalSlime(),   # 銀
             KingSlime(),    # 紫
-            MetalKing()     # 金
+            StrayMetal()     # 金
         ]
         
         for slime in test_slimes:
