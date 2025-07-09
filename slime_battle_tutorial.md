@@ -34,40 +34,40 @@
 [Module] slime_battle.py（スライムバトルメイン）
     ├── [Module] slime.py（スライム関連）
     │   └── [Class] EnemyCharacter（敵キャラクター）
-    │       │   property: hp, max_hp, attack, defense, name, exp, gold, type, weakness, resistance, status_effects
-    │       │   method: take_damage(), get_status()
+    │       │   [Property] hp, max_hp, attack, defense, name, exp, gold, type, weakness, resistance, status_effects
+    │       │   [Method]   take_damage(), get_status()
     │       └── [Class] BaseSlime（基本スライム）
-    │           │   property: color, special_ability
+    │           │   [Property] color, special_ability
     │           ├── [Class] MetalSlime（メタルスライム）
-    │           │       property: defense=255, exp=500, color=銀, special_ability=高確率で逃げる
+    │           │       [Property] defense=255, exp=500, color=銀, special_ability=高確率で逃げる
     │           ├── [Class] StrayMetal（はぐれメタル）
-    │           │       property: defense=255, exp=2000, color=銀, special_ability=非常に高確率で逃げる
+    │           │       [Property] defense=255, exp=2000, color=銀, special_ability=非常に高確率で逃げる
     │           ├── [Class] PoisonSlime（毒スライム）
-    │           │       property: color=紫, special_ability=毒攻撃
+    │           │       [Property] color=紫, special_ability=毒攻撃
     │           ├── [Class] KingSlime（キングスライム）
-    │           │       property: hp=30, attack=15, defense=8, color=青, special_ability=分裂攻撃
+    │           │       [Property] hp=30, attack=15, defense=8, color=青, special_ability=分裂攻撃
     │           └── [Class] MetalKingSlime（メタルキングスライム）
-    │                   property: defense=255, exp=5000, color=金, special_ability=非常に高確率で逃げる
+    │                   [Property] defense=255, exp=5000, color=金, special_ability=非常に高確率で逃げる
     ├── [Module] hero.py（勇者関連）
     │   ├── [Class] Equipment（装備品基底クラス）
-    │   │       property: name, equipment_type, stats
+    │   │       [Property] name, equipment_type, stats
     │   │   ├── [Class] UltimateWeapon（破壊神の杖）
-    │   │   │       property: attack=50, magic_attack=100, mp=50
+    │   │   │       [Property] attack=50, magic_attack=100, mp=50
     │   │   ├── [Class] UltimateArmor（賢者のローブ）
-    │   │   │       property: defense=45, magic_defense=65, hp=100
+    │   │   │       [Property] defense=45, magic_defense=65, hp=100
     │   │   └── [Class] UltimateAccessory（精霊の首飾り）
-    │   │           property: mp=100, magic_attack=30, magic_defense=30
+    │   │           [Property] mp=100, magic_attack=30, magic_defense=30
     │   └── [Class] AllyCharacter（味方キャラクター）
-    │           property: hp, max_hp, mp, max_mp, attack, defense, name, exp, level, job, magic_attack, magic_defense, spells, status_effects, equipment
-    │           method: get_status(), level_up(), equip()
+    │           [Property] hp, max_hp, mp, max_mp, attack, defense, name, exp, level, job, magic_attack, magic_defense, spells, status_effects, equipment
+    │           [Method]   get_status(), level_up(), equip()
     │       └── [Class] Sage（賢者）
-    │               property: name, job=賢者, spells
-    │               method: level_up(), cast_spell(), get_next_level_exp()
+    │               [Property] name, job=賢者, spells
+    │               [Method]   level_up(), cast_spell(), get_next_level_exp()
     ├── [Class] SlimeArt（スライム表示）
-    │       method: get_slime_art(), get_slime_color()
+    │       [Method]   get_slime_art(), get_slime_color()
     └── [Class] Battle（バトル）
-            property: player, enemies, current_enemy, turn_count, test_mode
-            method: start_battle(), player_turn(), enemy_turn(), process_status_effects(), win_battle(), lose_battle(), show_battle_status()
+    │       [Property] player, enemies, current_enemy, turn_count, test_mode
+    │       [Method]   start_battle(), player_turn(), enemy_turn(), process_status_effects(), win_battle(), lose_battle(), show_battle_status()
 
 [Module] test_slime_battle.py（スライムバトルテスト）
     ├── [Test Class] TestSlimeBase（基本スライムテスト）
